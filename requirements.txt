@@ -10,5 +10,6 @@ boto3
 joblib
 imblearn
 xgboost
+pymongo
 
 #-e.
