@@ -7,6 +7,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from imblearn.over_sampling import SMOTE
+
 
 from src.constant import *
 from src.exception import CustomException
@@ -121,13 +123,16 @@ class DataTransformation:
             X_train_scaled = preprocessor.fit_transform(X_train)
             X_test_scaled = preprocessor.transform(X_test)
 
+            smote = SMOTE(random_state=42)
+            X_train_balanced, y_train_balanced = smote.fit_resample(X_train_scaled, y_train)
+
             preprocessor_path = self.data_transformation_config.transformed_object_file_path
 
             os.makedirs(os.path.dirname(preprocessor_path), exist_ok=True)
 
             self.utils.save_object(file_path= preprocessor_path, obj= preprocessor)
 
-            train_arr = np.c_[X_train_scaled, np.array(y_train)]
+            train_arr = np.c_[X_train_balanced, np.array(y_train_balanced)]
             test_arr = np.c_[X_test_scaled, np.array(y_test)]
 
             return (train_arr, test_arr, preprocessor_path)
