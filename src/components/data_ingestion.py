@@ -21,7 +21,7 @@ class DataIngestion:
         self.data_ingestion_config = DataIngestionConfig()
         self.utils = MainUtils()
 
-    def export_collection_as_dataframe(self, collection_name, db_name):
+    def export_collection_as_dataframe(self, collection_name, db_name) -> pd.DataFrame:
         try:
             mongo_client = MongoClient(MONGO_DB_URL)
 
@@ -32,7 +32,12 @@ class DataIngestion:
             if "_id" in df.columns.to_list():
                 df = df.drop(columns=['_id'], axis=1)
 
-            df.replace({"na":np.nan}, inplace=True)
+            df = df.sort_values(by='ID').reset_index(drop=True)
+
+            for col in df.columns:
+                if col not in ['LIMIT_BAL', 'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 'BILL_AMT6',
+                            'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6']:
+                    df[col] = df[col].astype('int64')
 
             return df
         
@@ -40,7 +45,7 @@ class DataIngestion:
             raise CustomException(e, sys)
 
 
-    def export_data_into_feature_store_file_path(self) -> pd.DataFrame:
+    def export_data_into_feature_store_file_path(self) -> Path:
         try:
             logging.info("Exporting data from MongoDB")
             raw_file_path = self.data_ingestion_config.artifact_folder
