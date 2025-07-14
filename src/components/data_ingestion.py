@@ -32,13 +32,6 @@ class DataIngestion:
             if "_id" in df.columns.to_list():
                 df = df.drop(columns=['_id'], axis=1)
 
-            df = df.sort_values(by='ID').reset_index(drop=True)
-
-            for col in df.columns:
-                if col not in ['LIMIT_BAL', 'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 'BILL_AMT6',
-                            'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6']:
-                    df[col] = df[col].astype('int64')
-
             return df
         
         except Exception as e:
