@@ -1,5 +1,0 @@
-Model,ROC AUC,Precision,Recall,F1 Score,Accuracy
-K-Nearest Neighbors,1.0,0.999,0.993,0.996,0.998
-XGBoost,0.98,0.826,0.893,0.858,0.935
-Gradient Boosting,0.975,0.918,0.733,0.815,0.926
-Random Forest,0.963,0.862,0.699,0.772,0.909
