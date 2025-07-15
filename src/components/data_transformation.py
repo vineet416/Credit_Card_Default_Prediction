@@ -19,8 +19,8 @@ from dataclasses import dataclass
 @dataclass
 class DataTransformationConfig:
     artifact_dir: str = os.path.join(artifact_folder)
-    transformed_train_file_path: str = os.path.join(artifact_dir, 'train.npy')
-    transformed_test_file_path: str = os.path.join(artifact_dir, 'test.npy')
+    transformed_train_file_path: str = os.path.join(artifact_dir, 'train.csv')
+    transformed_test_file_path: str = os.path.join(artifact_dir, 'test.csv')
     transformed_object_file_path: str = os.path.join(artifact_dir, 'preprocessor.pkl')
 
 
@@ -54,7 +54,7 @@ class DataTransformation:
         
         except Exception as e:
             raise CustomException(e, sys)
-        
+
 
     
     def initiate_feature_engineering(self, dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -175,7 +175,26 @@ class DataTransformation:
             train_arr = np.c_[X_train_balanced, np.array(y_train_balanced)]
             test_arr = np.c_[X_test_scaled, np.array(y_test)]
 
-            return (train_arr, test_arr, preprocessor_path)
+            # Get feature names from the fitted preprocessor
+            feature_names = preprocessor.get_feature_names_out()
+
+            # Adding target column name
+            all_column_names = list(feature_names) + [TARGET_COLUMN] 
+
+            # removing prefix from all column names
+            all_column_names = [name.split('__')[-1] for name in all_column_names]
+
+            # Converting train_arr to DataFrame
+            train_df = pd.DataFrame(train_arr, columns=all_column_names)
+
+            # converting test_arr to DataFrame
+            test_df = pd.DataFrame(test_arr, columns=all_column_names)
+
+            # Saving the transformed train and test data to CSV files
+            train_df.to_csv(self.data_transformation_config.transformed_train_file_path, index=False)
+            test_df.to_csv(self.data_transformation_config.transformed_test_file_path, index=False)
+
+            return (train_df, test_df, preprocessor_path)
 
         except Exception as e:
             raise CustomException(e,sys)
