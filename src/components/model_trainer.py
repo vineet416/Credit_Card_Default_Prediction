@@ -171,11 +171,10 @@ class ModelTrainer:
 
            
             # printing the best model details
-            print(f"Best Model: {best_model_name} with ROC-AUC Score: {best_model_roc_auc_score}")
+            print(f"\nBest Model: {best_model_name} with ROC-AUC Score: {best_model_roc_auc_score:.4f}")
             print(f"Best Model F1 Score: {best_model_f1_score:.4f}")
             print(f"Best Model Precision: {best_model_precision:.4f}")
             print(f"Best Model Recall: {best_model_recall:.4f}")
-            print(f"Best Model Parameters: {best_model_params}")
 
 
             if best_model_roc_auc_score < self.model_trainer_config.expected_roc_auc_score:
