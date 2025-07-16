@@ -178,7 +178,7 @@ class ModelTrainer:
             print(f"Best Model Parameters: {best_model_params:4f}")
 
 
-            if best_model_score < self.model_trainer_config.expected_roc_auc_score:
+            if best_model_roc_auc_score < self.model_trainer_config.expected_roc_auc_score:
                 raise Exception(f"No best model found with an ROC-AUC score greater than the threshold {self.model_trainer_config.expected_roc_auc_score}")
 
             logging.info(f"Best found model on both training and testing dataset")
@@ -197,7 +197,7 @@ class ModelTrainer:
                 obj=best_model
             )
            
-            return self.model_trainer_config.trained_model_path
+            return best_model_roc_auc_score
 
         except Exception as e:
             raise CustomException(e, sys)
