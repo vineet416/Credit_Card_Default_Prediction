@@ -175,18 +175,18 @@ class ModelTrainer:
             print(f"Best Model F1 Score: {best_model_f1_score:.4f}")
             print(f"Best Model Precision: {best_model_precision:.4f}")
             print(f"Best Model Recall: {best_model_recall:.4f}")
-            print(f"Best Model Parameters: {best_model_params:4f}")
+            print(f"Best Model Parameters: {best_model_params}")
 
 
             if best_model_roc_auc_score < self.model_trainer_config.expected_roc_auc_score:
                 raise Exception(f"No best model found with an ROC-AUC score greater than the threshold {self.model_trainer_config.expected_roc_auc_score}")
 
             logging.info(f"Best found model on both training and testing dataset")
-            logging.info(f"Best model name: {best_model_name} and ROC-AUC score: {best_model_roc_auc_score:4f}")
-            logging.info(f"Best model F1 score: {best_model_f1_score:4f}")
-            logging.info(f"Best model precision: {best_model_precision:4f}")
-            logging.info(f"Best model recall: {best_model_recall:4f}")
-            logging.info(f"Best model parameters: {best_model_params:4f}")
+            logging.info(f"Best model name: {best_model_name} and ROC-AUC score: {best_model_roc_auc_score:.4f}")
+            logging.info(f"Best model F1 score: {best_model_f1_score:.4f}")
+            logging.info(f"Best model precision: {best_model_precision:.4f}")
+            logging.info(f"Best model recall: {best_model_recall:.4f}")
+            logging.info(f"Best model parameters: {best_model_params}")
 
             logging.info(f"Saving model at path: {self.model_trainer_config.trained_model_path}")
 
