@@ -3,11 +3,13 @@ from typing import Generator, List, Tuple
 import os
 import pandas as pd
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import roc_auc_score, f1_score, precision_score, recall_score
 from xgboost import XGBClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
+import warnings
+warnings.filterwarnings("ignore")
 
 from src.constant import *
 from src.exception import CustomException
@@ -21,7 +23,7 @@ from dataclasses import dataclass
 class ModelTrainerConfig:
     artifact_folder= os.path.join(artifact_folder)
     trained_model_path= os.path.join(artifact_folder,"model.pkl" )
-    expected_f1_score= 0.6
+    expected_roc_auc_score= 0.7
     model_config_file_path= os.path.join('config','model.yaml')
 
 
@@ -32,76 +34,101 @@ class ModelTrainer:
         self.model_trainer_config = ModelTrainerConfig()
         self.utils = MainUtils()
         self.models = {
-                        'XGBClassifier': XGBClassifier(n_jobs=-1, random_state=1),
-                        'GradientBoostingClassifier' : GradientBoostingClassifier(random_state=1),
-                        'KNNClassifier' : KNeighborsClassifier(n_jobs=-1),
-                        'RandomForestClassifier': RandomForestClassifier(n_jobs=-1, random_state=1)
+                        'XGBClassifier': XGBClassifier(),
+                        'GradientBoostingClassifier' : GradientBoostingClassifier(),
+                        'KNNClassifier' : KNeighborsClassifier(),
+                        'RandomForestClassifier': RandomForestClassifier()
                         }
 
 
 
-
-
-    def evaluate_models(self, X, y, models) -> dict:
+    def model_train_eval_with_tuning(self, X_train, y_train, X_test, y_test, models):
         try:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=1, stratify=y)
+            logging.info("Entered model_train_eval_with_tuning method of ModelTrainer class")
 
+            # Get all model parameter grids from model.yaml
+            model_config = self.utils.read_yaml_file(self.model_trainer_config.model_config_file_path)
+
+            model_param_grids = {
+                model_name: model_config["model_selection"]["model"][model_name]["search_param_grid"]
+                for model_name in model_config["model_selection"]["model"]
+            }
+            
             report = {}
+            best_models = {}
 
-            for i in range(len(list(models))):
+            for model_name in models.keys():     
+                logging.info(f"Training and evaluating model: {model_name}")
 
-                model = list(models.values())[i]
+                # Get the base model and parameter grid
+                base_model = models[model_name]
+                param_grid = model_param_grids[model_name]
+                
+                # Perform GridSearchCV
+                grid_search = GridSearchCV(
+                    estimator=base_model,
+                    param_grid=param_grid,
+                    cv=5,
+                    scoring='roc_auc',
+                    n_jobs=-1,
+                    verbose=1
+                )
+                
+                # Fit the grid search
+                grid_search.fit(X_train, y_train)
+                
+                # Get the best model
+                best_model = grid_search.best_estimator_
+                best_models[model_name] = best_model
+                
+                # Make predictions on test set
+                y_test_pred_proba = best_model.predict_proba(X_test)[:, 1]
+                
+                # Calculate test ROC AUC score
+                model_roc_auc_score = float(roc_auc_score(y_test, y_test_pred_proba))
+                
+                # Store all metrics and best parameters
+                report[model_name] = {
+                    'Best_Params': grid_search.best_params_,
+                    'CV_Score': round(float(grid_search.best_score_), 4),
+                    'Test_ROC_AUC': round(model_roc_auc_score, 4)
+                }
 
-                model.fit(X_train, y_train)  
+                # Log all models metrics
+                logging.info(f"Best Parameters for {model_name}: {grid_search.best_params_}")
+                logging.info(f"Cross-Validation Score: {grid_search.best_score_:.4f}")
+                logging.info(f"Test ROC AUC Score: {model_roc_auc_score:.4f}")
 
-                y_train_pred = model.predict(X_train)
-
-                y_test_pred = model.predict(X_test)
-
-                train_model_score = f1_score(y_train, y_train_pred)
-
-                test_model_score = f1_score(y_test, y_test_pred)
-
-                report[list(models.keys())[i]] = test_model_score
-
+                
             return report
 
         except Exception as e:
-            raise CustomException(e, sys)
+                raise CustomException(e, sys)
 
 
 
 
-
-    def get_best_model(self,
-                    x_train:np.array,
-                    y_train: np.array,
-                    x_test:np.array,
-                    y_test: np.array):
-        
+    def get_best_model(self, report):
+            
         try:
-            model_report: dict = self.evaluate_models(
-                 x_train =  x_train,
-                 y_train = y_train,
-                 x_test =  x_test,
-                 y_test = y_test,
-                 models = self.models
-            )
+            logging.info("Entered get_best_model method of ModelTrainer class")
+            logging.info("Evaluating the best model based on ROC-AUC score")
 
-            print(model_report)
+            # Get the best model based on ROC-AUC score
+            best_model_name = max(report.keys(), key=lambda x: report[x]['Test_ROC_AUC'])
+            best_model_score = report[best_model_name]['Test_ROC_AUC']
 
-            best_model_score = max(sorted(model_report.values()))
+            # getting best model parameters
+            best_model_params = report[best_model_name]['Best_Params']      
 
-            ## To get best model name from dict
-
-            best_model_name = list(model_report.keys())[
-                list(model_report.values()).index(best_model_score)
-            ]
-
+            # Retrieve the best model object
             best_model_object = self.models[best_model_name]
 
+            # Best model object with the best parameters
+            best_model_object.set_params(**best_model_params)
+
             return best_model_name, best_model_object, best_model_score
-
+        
         except Exception as e:
             raise CustomException(e,sys)
 
@@ -109,83 +136,58 @@ class ModelTrainer:
 
 
 
-
-    def finetune_best_model(self,
-                            best_model_object:object,
-                            best_model_name,
-                            X_train,
-                            y_train,
-                            ) -> object:
-       
-        try:
-            model_param_grid = self.utils.read_yaml_file(self.model_trainer_config.model_config_file_path)["model_selection"]["model"][best_model_name]["search_param_grid"]
-
-            grid_search = GridSearchCV(
-                best_model_object, param_grid=model_param_grid, cv=5, n_jobs=-1, verbose=1 )
-           
-            grid_search.fit(X_train, y_train)
-
-            best_params = grid_search.best_params_
-
-            print("best params are:", best_params)
-
-            finetuned_model = best_model_object.set_params(**best_params)
-           
-            return finetuned_model
-       
-        except Exception as e:
-            raise CustomException(e,sys)
-
-
-
-
-
-
-
-    def initiate_model_trainer(self, train_array, test_array):
+    def initiate_model_trainer(self, train_df, test_df):
         try:
             logging.info(f"Splitting training and testing input and target feature")
 
-            x_train, y_train, x_test, y_test = (
-                train_array[:, :-1],
-                train_array[:, -1],
-                test_array[:, :-1],
-                test_array[:, -1],
+            X_train, y_train, X_test, y_test = (
+                train_df.drop(columns=[TARGET_COLUMN]).values,
+                train_df[TARGET_COLUMN].values,
+                test_df.drop(columns=[TARGET_COLUMN]).values,
+                test_df[TARGET_COLUMN].values
             )
 
             logging.info(f"Extracting model config file path")
+            
+            # Train and evaluate models with hyperparameter tuning
+            model_report: dict = self.model_train_eval_with_tuning(X_train = X_train, y_train = y_train, X_test = X_test, y_test = y_test, models=self.models)
 
-            model_report: dict = self.evaluate_models(X=x_train, y=y_train, models=self.models)
+            # Get the best model name, object, and score
+            best_model_name, best_model, best_model_score = self.get_best_model(model_report)
 
-            ## To get best model score from dict
-            best_model_score = max(sorted(model_report.values()))
+            # Fit the best model on the entire training data
+            best_model.fit(X_train, y_train)
+            best_model_params = best_model.get_params()
 
-            ## To get best model name from dict
-            best_model_name = list(model_report.keys())[
-                list(model_report.values()).index(best_model_score)
-            ]
+            # Make predictions on the test set
+            y_pred = best_model.predict(X_test)
+            y_pred_proba = best_model.predict_proba(X_test)[:, 1]
 
-            best_model = self.models[best_model_name]
+            # Calculate metrics for the best model
+            best_model_roc_auc_score = roc_auc_score(y_test, y_pred_proba)
+            best_model_f1_score = f1_score(y_test, y_pred)
+            best_model_precision = precision_score(y_test, y_pred)
+            best_model_recall = recall_score(y_test, y_pred)
 
-            best_model = self.finetune_best_model(
-                best_model_name= best_model_name,
-                best_model_object= best_model,
-                X_train= x_train,
-                y_train= y_train
-            )
-
-            best_model.fit(x_train, y_train)
-            y_pred = best_model.predict(x_test)
-            best_model_score = f1_score(y_test, y_pred)
            
-            print(f"best model name {best_model_name} and f1 score: {best_model_score}")
+            # printing the best model details
+            print(f"Best Model: {best_model_name} with ROC-AUC Score: {best_model_roc_auc_score}")
+            print(f"Best Model F1 Score: {best_model_f1_score:.4f}")
+            print(f"Best Model Precision: {best_model_precision:.4f}")
+            print(f"Best Model Recall: {best_model_recall:.4f}")
+            print(f"Best Model Parameters: {best_model_params:4f}")
 
 
-            if best_model_score < self.expected_f1_score:
-                raise Exception(f"No best model found with an f1 score greater than the threshold {self.expected_f1_score}")
+            if best_model_score < self.model_trainer_config.expected_roc_auc_score:
+                raise Exception(f"No best model found with an ROC-AUC score greater than the threshold {self.model_trainer_config.expected_roc_auc_score}")
 
             logging.info(f"Best found model on both training and testing dataset")
-       
+            logging.info(f"Best model name: {best_model_name} and ROC-AUC score: {best_model_roc_auc_score:4f}")
+            logging.info(f"Best model F1 score: {best_model_f1_score:4f}")
+            logging.info(f"Best model precision: {best_model_precision:4f}")
+            logging.info(f"Best model recall: {best_model_recall:4f}")
+            logging.info(f"Best model parameters: {best_model_params:4f}")
+
             logging.info(f"Saving model at path: {self.model_trainer_config.trained_model_path}")
 
             os.makedirs(os.path.dirname(self.model_trainer_config.trained_model_path), exist_ok=True)
