@@ -32,7 +32,6 @@ class TrainingPipeline:
         
 
     
-    
     def start_model_training(self, train_df, test_df):
         try:
             model_trainer = ModelTrainer()
