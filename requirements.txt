@@ -11,4 +11,4 @@ xgboost
 pymongo
 streamlit
 
-#-e.
+-e .
