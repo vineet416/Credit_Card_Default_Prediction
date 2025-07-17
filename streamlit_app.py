@@ -117,8 +117,8 @@ if st.sidebar.button("Predict"):
 
         # Displaying top features influencing the prediction
         st.subheader("Top 5 Features Influencing the Prediction:")
-        st.bar_chart(top_features_df.set_index('Feature')['Importance'] * 100, 
-                     use_container_width=True, y_label="Importance (%)", x_label="Feature names")
+        st.bar_chart(top_features_df.set_index('Feature')['Importance'] * 100)
+
 
     elif probability[0][0] > 0.5:
         # Light green background for no default prediction
@@ -136,10 +136,7 @@ if st.sidebar.button("Predict"):
 
         # Displaying top features influencing the prediction
         st.subheader("Top 5 Features Influencing the Prediction:")
-        st.bar_chart(top_features_df.set_index('Feature')['Importance'] * 100, 
-                     use_container_width=True, y_label="Importance (%)", x_label="Feature names")
+        st.bar_chart(top_features_df.set_index('Feature')['Importance'] * 100)
 
 else:
     st.write("Please enter the input features and click 'Predict' to see the results.")
-
-
