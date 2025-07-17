@@ -1,4 +1,4 @@
-# Credit Card Default Prediction
+# Credit Card Default Prediction - ([App_Link](https://credit-card--default-prediction.streamlit.app/))
 
 A comprehensive machine learning project to predict credit card default payments using various classification algorithms. This project implements an end-to-end pipeline from data ingestion to model deployment using best practices in MLOps and software engineering.
 
@@ -159,7 +159,7 @@ The project evaluates multiple machine learning algorithms:
 - All models achieve good Areas under the ROC curve around 0.7
 - Feature importance analysis reveals payment history as the most predictive factor
 
-## 🌐 Web Application - ([Web App Link](https://credit-card--default-prediction.streamlit.app/))
+## 🌐 Web Application - ([App-Link](https://credit-card--default-prediction.streamlit.app/))
 
 The Streamlit web application includes:
 
