@@ -11,5 +11,6 @@ joblib
 imblearn
 xgboost
 pymongo
+streamlit
 
 #-e.
