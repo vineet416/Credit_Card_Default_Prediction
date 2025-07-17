@@ -55,3 +55,9 @@ class TrainingPipeline:
 
         except Exception as e:
             raise CustomException(e, sys)
+        
+
+# Run the training pipeline
+if __name__ == "__main__":
+    training_pipeline = TrainingPipeline()
+    training_pipeline.run_pipeline()
