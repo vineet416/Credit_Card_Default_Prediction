@@ -159,7 +159,7 @@ The project evaluates multiple machine learning algorithms:
 - All models achieve good Areas under the ROC curve around 0.7
 - Feature importance analysis reveals payment history as the most predictive factor
 
-## 🌐 Web Application - ([App-Link](https://credit-card--default-prediction.streamlit.app/))
+## 🌐 Web Application - ([App_Link](https://credit-card--default-prediction.streamlit.app/))
 
 The Streamlit web application includes:
 
