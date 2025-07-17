@@ -25,7 +25,7 @@ def format_repayment_status(x):
     status_map = {
         -2: "No consumption",
         -1: "Pay duly", 
-        0: "Payment delay for less than 1 month",
+        0: "Paid on-time",
         1: "Payment delay for 1 month",
         2: "Payment delay for 2 months",
         3: "Payment delay for 3 months",
@@ -47,21 +47,21 @@ pay_6 = st.sidebar.selectbox("Pay 6", options=[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8
 
 # Bill Amounts Section
 st.sidebar.subheader("Bill Amounts")
-bill_amt1 = st.sidebar.number_input("Bill Amount 1", min_value=0, step=1000)
-bill_amt2 = st.sidebar.number_input("Bill Amount 2", min_value=0, step=1000)
-bill_amt3 = st.sidebar.number_input("Bill Amount 3", min_value=0, step=1000)
-bill_amt4 = st.sidebar.number_input("Bill Amount 4", min_value=0, step=1000)
-bill_amt5 = st.sidebar.number_input("Bill Amount 5", min_value=0, step=1000)
-bill_amt6 = st.sidebar.number_input("Bill Amount 6", min_value=0, step=1000)
+bill_amt1 = st.sidebar.number_input("Bill Amount 1", min_value=0, step=1000, max_value=1000000)
+bill_amt2 = st.sidebar.number_input("Bill Amount 2", min_value=0, step=1000, max_value=1000000)
+bill_amt3 = st.sidebar.number_input("Bill Amount 3", min_value=0, step=1000, max_value=1000000)
+bill_amt4 = st.sidebar.number_input("Bill Amount 4", min_value=0, step=1000, max_value=1000000)
+bill_amt5 = st.sidebar.number_input("Bill Amount 5", min_value=0, step=1000, max_value=1000000)
+bill_amt6 = st.sidebar.number_input("Bill Amount 6", min_value=0, step=1000, max_value=1000000)
 
 # Payment Amounts Section
 st.sidebar.subheader("Payment Amounts")
-pay_amt1 = st.sidebar.number_input("Pay Amount 1", min_value=0, step=1000)
-pay_amt2 = st.sidebar.number_input("Pay Amount 2", min_value=0, step=1000)
-pay_amt3 = st.sidebar.number_input("Pay Amount 3", min_value=0, step=1000)
-pay_amt4 = st.sidebar.number_input("Pay Amount 4", min_value=0, step=1000)
-pay_amt5 = st.sidebar.number_input("Pay Amount 5", min_value=0, step=1000)
-pay_amt6 = st.sidebar.number_input("Pay Amount 6", min_value=0, step=1000)
+pay_amt1 = st.sidebar.number_input("Pay Amount 1", min_value=0, step=1000, max_value=1000000)
+pay_amt2 = st.sidebar.number_input("Pay Amount 2", min_value=0, step=1000, max_value=1000000)
+pay_amt3 = st.sidebar.number_input("Pay Amount 3", min_value=0, step=1000, max_value=1000000)
+pay_amt4 = st.sidebar.number_input("Pay Amount 4", min_value=0, step=1000, max_value=1000000)
+pay_amt5 = st.sidebar.number_input("Pay Amount 5", min_value=0, step=1000, max_value=1000000)
+pay_amt6 = st.sidebar.number_input("Pay Amount 6", min_value=0, step=1000, max_value=1000000)
 
 # Create a DataFrame from user input
 input_data = {
