@@ -1,14 +1,14 @@
-ipykernel
-numpy
-pandas
-scipy
-scikit-learn
-matplotlib
-seaborn
-PyYAML
-imblearn
-xgboost
-pymongo
-streamlit
+ipykernel==6.29.4
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+scikit-learn==1.3.2
+imbalanced-learn==0.12.0
+matplotlib==3.8.4
+seaborn==0.13.2
+PyYAML==6.0.1
+xgboost==2.0.3
+pymongo==4.7.2
+streamlit==1.31.1
 
 -e .
