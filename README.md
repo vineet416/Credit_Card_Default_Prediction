@@ -3,16 +3,16 @@
 A comprehensive machine learning project to predict credit card default payments using various classification algorithms. This project implements an end-to-end pipeline from data ingestion to model deployment using best practices in MLOps and software engineering.
 
 ## 📋 Table of Contents
-- [Project Overview](#project-overview)
-- [Dataset Information](#dataset-information)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Model Performance](#model-performance)
-- [Web Application](#web-application)
-- [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
+- [Project Overview](##project-overview)
+- [Dataset Information](##dataset-information)
+- [Features](##features)
+- [Project Structure](##project-structure)
+- [Installation](##installation)
+- [Usage](##usage)
+- [Model Performance](##model-performance)
+- [Web Application](##web-application)
+- [Technologies Used](##technologies-used)
+- [Contributing](##contributing)
 
 ## 🎯 Project Overview
 
