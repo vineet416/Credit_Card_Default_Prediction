@@ -108,7 +108,7 @@ if st.sidebar.button("Predict"):
             <div style="background-color: #ffebee; padding: 20px; border-radius: 10px; border-left: 5px solid #f44336;">
                 <h3 style="color: #d32f2f; margin: 0;">⚠️ Default Risk Detected</h3>
                 <p style="color: #d32f2f; margin: 10px 0 0 0; font-size: 16px;">
-                    The model predicts that the customer is likely to default with a probability of {probability[0][1] * 100:.2f}%.
+                    The model predicts that the customer is likely to default with a probability of {probability[0][1]:.2f}%.
                 </p>
             </div>
             """, 
@@ -127,7 +127,7 @@ if st.sidebar.button("Predict"):
             <div style="background-color: #e8f5e8; padding: 20px; border-radius: 10px; border-left: 5px solid #4caf50;">
                 <h3 style="color: #388e3c; margin: 0;">✅ Low Default Risk</h3>
                 <p style="color: #388e3c; margin: 10px 0 0 0; font-size: 16px;">
-                    The model predicts that the customer is not likely to default with a probability of {probability[0][0] * 100:.2f}%.
+                    The model predicts that the customer is not likely to default with a probability of {probability[0][0]:.2f}%.
                 </p>
             </div>
             """, 
