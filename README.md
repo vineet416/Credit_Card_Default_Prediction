@@ -121,7 +121,7 @@ from src.pipeline.train_pipeline import TrainPipeline
 
 # Initialize and run training pipeline
 pipeline = TrainPipeline()
-pipeline.run()
+pipeline.run_pipeline()
 ```
 
 2. **Or run via command line**:
