@@ -1,5 +1,5 @@
 # Credit Card Default Prediction
-
+ 
 An end-to-end machine learning project that predicts whether a credit card client will default on next month's payment. It covers EDA, preprocessing, model comparison, a modular training pipeline (MongoDB → transform → train) and a Streamlit app for single-client predictions.
 
 ## Project Files
