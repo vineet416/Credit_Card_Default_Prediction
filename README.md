@@ -1,216 +1,75 @@
-# Credit Card Default Prediction - ([App_Link](https://credit-card--default-prediction.streamlit.app/))
+# Credit Card Default Prediction
 
-A comprehensive machine learning project to predict credit card default payments using various classification algorithms. This project implements an end-to-end pipeline from data ingestion to model deployment using best practices in MLOps.
+An end-to-end machine learning project that predicts whether a credit card client will default on next month's payment. It covers EDA, preprocessing, model comparison, a modular training pipeline (MongoDB → transform → train) and a Streamlit app for single-client predictions.
 
-## 📋 Table of Contents
-- [Project Overview](#project-overview)
-- [Dataset Information](#dataset-information)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Model Performance](#model-performance)
-- [Web Application](#web-application)
-- [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
+## Project Files
 
-## 🎯 Project Overview
+| Path | Description |
+|---|---|
+| `notebooks/1-exploratory_data_analysis-EDA.ipynb` | Data checks, distributions, outliers, feature and target relationships |
+| `notebooks/2-data_preprocessing.ipynb` | Cleaning, feature engineering, split, scaling/encoding, SMOTE |
+| `notebooks/3-model_training_and_evaluation.ipynb` | 7 models tuned with CV, 4 evaluated on the test set, feature importance |
+| `3-model_training_and_evaluation.ipynb` (root) | Variant of notebook 3 that adds a baseline Logistic Regression |
+| `notebooks/datasets/UCI_Credit_Card.csv` | Raw dataset (30,000 rows × 25 columns) |
+| `notebooks/csv_outputs/`, `*_performance_outputs/`, `visualization_outputs/` | Saved metrics tables, model plots and EDA charts |
+| `src/components/` | Data ingestion (MongoDB), data transformation, model trainer |
+| `src/pipeline/` | `train_pipeline.py` (training) and `predict_pipeline.py` (inference) |
+| `config/model.yaml` | Hyperparameter grids for XGBoost, Gradient Boosting, KNN, Random Forest |
+| `artifacts/` | `credit_data.csv`, `train.csv`, `test.csv`, `preprocessor.pkl`, `model.pkl` |
+| `streamlit_app.py` | Web UI for entering client details and getting a default probability |
+| `upload_data.py` | Loads the raw CSV into MongoDB |
+| `*.png` (root) | Architecture diagram, code-flow diagram, app screenshots |
 
-In an increasingly dynamic financial landscape, XYZ Financial Services faces the critical challenge of accurately predicting credit risk. This project develops a predictive model that estimates the probability of credit default based on credit card owners' characteristics such as age, gender, education, marital status, credit limit, and payment history.
+## Dataset
 
-### Business Goal
-Enable XYZ Financial Services to:
-- Identify high-risk credit clients
-- Tailor risk mitigation strategies
-- Adjust credit limits appropriately
-- Offer targeted financial counseling
-- Reduce default rates and improve portfolio health
+UCI "Default of Credit Card Clients" (Taiwan, April–September 2005). 30,000 clients, 24 input columns plus the target.
 
-## 📊 Dataset Information
+| Column | Description |
+|---|---|
+| `ID` | Client ID (dropped before modeling) |
+| `LIMIT_BAL` | Credit limit (NTD) |
+| `SEX`, `EDUCATION`, `MARRIAGE`, `AGE` | Demographics (coded integers; age in years) |
+| `PAY_0`, `PAY_2`–`PAY_6` | Repayment status, Sept → Apr (-2/-1/0 = no use/paid/revolving; 1+ = months late) |
+| `BILL_AMT1`–`BILL_AMT6` | Monthly bill statements, Sept → Apr |
+| `PAY_AMT1`–`PAY_AMT6` | Monthly payments made, Sept → Apr |
+| `default.payment.next.month` | Target: 1 = default, 0 = no default |
 
-- **Source**: UCI Machine Learning Repository ([Data Source Link](https://www.kaggle.com/datasets/uciml/default-of-credit-card-clients-dataset))
-- **Dataset**: UCI_Credit_Card.csv
-- **Size**: 30,000 instances with 25 features
-- **Target Variable**: `default.payment.next.month` (Binary: 1 = default, 0 = no default)
-- **Time Period**: April 2005 to September 2005 (Taiwan)
+## Approach
 
-### Key Features
-- **Demographic**: Age, Gender, Education, Marital Status
-- **Credit Information**: Credit Limit Balance
-- **Repayment Status**: Past 6 months payment status (PAY_0 to PAY_6)
-- **Bill Statements**: Past 6 months bill amounts (BILL_AMT1 to BILL_AMT6)
-- **Payment Amounts**: Past 6 months payment amounts (PAY_AMT1 to PAY_AMT6)
+1. **Understand the data:** 30,000 rows, no nulls, unique IDs, 22.1% positive class.
+2. **Clean:** `MARRIAGE = 0` → missing (54 rows); `EDUCATION` 0/4/5/6 → "others" (468 rows); duplicates removed (29,875 rows left).
+3. **Engineer features:** age groups, average bill, average payment, average delay score, average utilization (bill ÷ limit).
+4. **Prepare:** stratified 75/25 split (22,406 / 7,469), median/mode imputation, scaling, one-hot and ordinal encoding, SMOTE on train only.
+5. **Model:** grid search (5-fold, ROC AUC) over Logistic Regression, Decision Tree, KNN, Random Forest, AdaBoost, Gradient Boosting, XGBoost.
+6. **Evaluate and deploy:** 4 best candidates scored on the held-out test set; Random Forest chosen and served through Streamlit.
 
-## ✨ Features
+## Key Insights
 
-- **Data Pipeline**: Automated data ingestion, transformation, and preprocessing
-- **Model Training**: Multiple algorithm comparison and hyperparameter tuning
-- **Model Evaluation**: Comprehensive performance metrics and visualization
-- **Web Application**: Interactive Streamlit app for real-time predictions
-- **Logging**: Comprehensive logging system for debugging and monitoring
-- **Exception Handling**: Robust error handling throughout the pipeline
-- **Modular Architecture**: Clean, maintainable, and scalable codebase
+Computed from the raw CSV (30,000 rows) and the saved test results.
 
-## 📁 Project Structure
+| Finding | Number |
+|---|---|
+| Overall default rate | 22.1% (6,636 clients) |
+| Latest repayment 2+ months late vs on time/paid (`PAY_0`) | 69.6% (3,130 clients) vs 13.8% (23,182) |
+| Default rate by credit-limit quartile (lowest → highest) | 31.8% → 24.7% → 17.4% → 14.0% |
+| Default rate by education: graduate / university / high school | 19.2% / 23.7% / 25.2% |
+| Default rate by age: 30–34 (lowest) vs 20–24 | 19.3% vs 27.2% |
+| Median average monthly payment, defaulters vs non-defaulters | 1,612 vs 2,754 NTD |
+| Random Forest on test set (AUC / precision / recall / F1 / accuracy) | 0.777 / 0.570 / 0.483 / 0.523 / 0.805 |
+| Test-set AUC: Gradient Boosting / XGBoost / KNN | 0.759 / 0.758 / 0.693 |
+| Baseline Logistic Regression (raw features, no SMOTE) | F1 0.294, recall 0.189 |
 
-```
-Credit Card Default Prediction/
-├── artifacts/                          # Artifacts folder stores all the outputs of ML pipeline
-│   ├── credit_data.csv
-│   ├── model.pkl
-│   ├── preprocessor.pkl
-│   ├── test.csv
-│   └── train.csv
-├── config/                            # Configuration files
-│   └── model.yaml
-├── logs/                              # Application logs
-├── notebooks/                         # Jupyter notebooks for analysis
-│   ├── 1-exploratory_data_analysis-EDA.ipynb
-│   ├── 2-data_preprocessing.ipynb
-│   ├── 3-model_training_and_evaluation.ipynb
-│   ├── csv_outputs/                   # Model performance results
-│   ├── datasets/                      # Raw dataset
-│   ├── feature_importance_outputs/    # Feature importance plots
-│   ├── test_performance_outputs/      # Test performance visualizations
-│   └── validation_performance_outputs/ # Validation performance visualizations
-├── src/                               # Source code
-│   ├── components/                    # Core components
-│   │   ├── data_ingestion.py
-│   │   ├── data_transformation.py
-│   │   └── model_trainer.py
-│   ├── pipeline/                      # Training and prediction pipelines
-│   │   ├── train_pipeline.py
-│   │   └── predict_pipeline.py
-│   ├── constant/                      # Constants
-│   ├── utils/                         # Utility functions
-│   ├── exception.py                   # Custom exception handling
-│   └── logger.py                      # Logging configuration
-├── streamlit_app.py                   # Web application
-├── upload_data.py                     # Upload data into MongoDB
-├── requirements.txt                   # Dependencies
-├── setup.py                          # Package setup
-└── README.md                         # Project documentation
-```
+- Payment history dominates: `PAY_0` (0.117) and `Avg_Delay_Score` (0.085) are the top Random Forest importances.
+- Random Forest catches about half of defaulters (798 of 1,652) with 602 false alarms among 5,817 non-defaulters.
 
-## 🚀 Installation
+## Tech Stack
 
-1. **Clone the repository**:
-```bash
-git clone https://github.com/vineet416/Credit_Card_Default_Prediction.git
-cd Credit_Card_Default_Prediction
-```
+Python · pandas, NumPy · scikit-learn (pipelines, GridSearchCV) · imbalanced-learn (SMOTE) · XGBoost · matplotlib, seaborn · Streamlit · MongoDB (pymongo) · PyYAML · Jupyter · Dev Container (Python 3.11)
 
-2. **Create a virtual environment**:
-```bash
-conda create -p venv python==3.12 -y
-conda activate venv/
-```
+## How to Use
 
-3. **Install dependencies and package**:
-```bash
-pip install -r requirements.txt
-```
-
-## 💻 Usage
-
-### Training the Model
-
-1. **Run the training pipeline**:
-```python
-from src.pipeline.train_pipeline import TrainPipeline
-
-# Initialize and run training pipeline
-pipeline = TrainPipeline()
-pipeline.run_pipeline()
-```
-
-2. **Or run via command line**:
-```bash
-python src/pipeline/train_pipeline.py
-```
-
-### Web Application
-
-Launch the Streamlit web application:
-```bash
-streamlit run streamlit_app.py
-```
-
-The web app provides an intuitive interface for:
-- Input credit card holder information
-- Real-time default probability prediction
-- Interactive feature input with explanations
-
-## 📈 Model Performance
-
-The project evaluates multiple machine learning algorithms:
-
-| Model | ROC AUC | Precision | Recall | F1 Score | Accuracy |
-|-------|---------|-----------|--------|----------|----------|
-| **Random Forest** | 0.777 | 0.57 | 0.483 | 0.523 | 0.805 |
-| **Gradient Boosting** | 0.759 | 0.585 | 0.41 | 0.483 | 0.805 |
-| **XGBoost** | 0.758 | 0.504 | 0.515 | 0.509 | 0.781 |
-| **K-Nearest Neighbors** | 0.693 | 0.375 | 0.521 | 0.436 | 0.702 |
-
-**Best Model**: Random Forest with the highest ROC AUC score of 0.777 and F1 Score of 0.523.
-
-### Key Insights:
-- Random Forest provides the best balance of precision and recall
-- All models achieve good Areas under the ROC curve around 0.7
-- Feature importance analysis reveals payment history as the most predictive factor
-
-## 🌐 Web Application - ([App_Link](https://credit-card--default-prediction.streamlit.app/))
-
-The Streamlit web application includes:
-
-- **User-friendly Interface**: Intuitive input fields for all features
-- **Real-time Predictions**: Instant default probability calculation
-- **Feature Explanations**: Detailed descriptions of input parameters
-- **Interactive Visualizations**: Dynamic charts and plots
-- **Responsive Design**: Works on desktop and mobile devices
-
-### Application Features:
-- Basic information input (age, gender, education, marital status)
-- Credit limit and payment history tracking
-- Bill amounts and payment amounts for past 6 months
-- Instant prediction results with probability scores
-- Visualizations of top 5 features influencing the prediction
-
-## 🛠️ Technologies Used
-
-- **Programming Language**: Python 3.12+
-- **Machine Learning**: scikit-learn, XGBoost, imbalanced-learn
-- **Data Processing**: pandas, numpy
-- **Visualization**: matplotlib, seaborn
-- **Web Framework**: Streamlit
-- **Configuration**: PyYAML
-- **Database**: pymongo (MongoDB)
-- **Development**: Jupyter Notebooks
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Setup:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 👤 Author
-
-**Vineet Patel**
-- Email: vineetpatel468@gmail.com
-- GitHub: [@vineet416](https://github.com/vineet416)
-- LinkedIn: [@vineet416](https://www.linkedin.com/in/vineet416/)
-
-## 🙏 Acknowledgments
-
-- UCI Machine Learning Repository for providing the dataset
-- The open-source community for the amazing tools and libraries
-- Streamlit for the web application framework and ease of deployment
-
----
-
-⭐ If you found this project helpful, please give it a star!
+1. Install dependencies: `pip install -r requirements.txt`
+2. Run the app (uses the saved `artifacts/`): `streamlit run streamlit_app.py`
+3. Explore: open the notebooks in order 1 → 2 → 3 and run them from the `notebooks/` folder.
+4. Retrain (needs MongoDB; set `MONGO_DB_URL` in `src/constant/__init__.py`, then `python upload_data.py`): `python -m src.pipeline.train_pipeline`
+5. Live demo link from the previous README: https://credit-card--default-prediction.streamlit.app/ (not re-checked).
